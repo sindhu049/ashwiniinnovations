@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Interactive Experience | Ashwini Innovations</title>
+
+    <!-- LOAD ORDER: MindAR → A-Frame → MindAR-AFrame bridge -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image.prod.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        /* MindAR injects a container div — make sure it fills screen */
+        .mindar-ui-overlay {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* A-Frame scene must sit on top of MindAR video layer */
+        a-scene {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Our UI sits above everything */
+        .overlay-ui {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: calc(16px + env(safe-area-inset-top)) 20px 16px;
+            z-index: 9999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
+        }
+        .btn-ui {
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 600;
+            pointer-events: all;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #unmute-btn {
+            position: fixed;
+            bottom: max(40px, env(safe-area-inset-bottom, 40px));
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #00ffff, #0077be);
+            color: #020c1b;
+            padding: 14px 32px;
+            border-radius: 50px;
+            border: none;
+            z-index: 9999;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: none;
+            white-space: nowrap;
+            box-shadow: 0 8px 28px rgba(0,255,255,0.45);
+            animation: bounceBtn 2.2s ease-in-out infinite;
+        }
+        @keyframes bounceBtn {
+            0%, 100% { transform: translateX(-50%) translateY(0px); }
+            50%       { transform: translateX(-50%) translateY(-9px); }
+        }
+    </style>
+
+    <!--
+        CRITICAL: Register ALL custom A-Frame components in <head>
+        BEFORE the <a-scene> is parsed. If registered after, A-Frame
+        won't attach the component to entities during scene init.
+    -->
+    <script>
+        // Global state
+        let audioUnlocked = false;
+        let activeVideoEl  = null;
+
+        AFRAME.registerComponent('ar-video-target', {
+            schema: { videoId: { type: 'string' } },
+
+            init: function () {
+                const vid   = document.getElementById(this.data.videoId);
+                const plane = this.el.querySelector('a-video');
+
+                if (!vid) {
+                    console.error('[Camera] Video element not found:', this.data.videoId);
+                    return;
+                }
+
+                // Correct the plane's aspect ratio to match the video
+                const applyAspect = () => {
+                    if (vid.videoWidth > 0 && vid.videoHeight > 0) {
+                        const ratio = vid.videoHeight / vid.videoWidth;
+                        plane.setAttribute('height', ratio.toFixed(5));
+                        console.log('[AR] Aspect ratio set →', this.data.videoId,
+                                    vid.videoWidth + 'x' + vid.videoHeight,
+                                    '→ height=' + ratio.toFixed(3));
+                    }
+                };
+                if (vid.readyState >= 1) applyAspect();
+                else vid.addEventListener('loadedmetadata', applyAspect, { once: true });
+
+                // ── TARGET FOUND ─────────────────────────────────────────
+                this.el.addEventListener('targetFound', () => {
+                    console.log('[Camera] targetFound →', this.data.videoId);
+
+                    // Stop & mute any previously active video
+                    if (activeVideoEl && activeVideoEl !== vid) {
+                        activeVideoEl.pause();
+                        activeVideoEl.currentTime = 0;
+                        activeVideoEl.muted = true;
+                    }
+
+                    // Claim as active
+                    activeVideoEl = vid;
+                    vid.currentTime = 0;
+                    vid.muted = !audioUnlocked;
+
+                    // Show unmute hint
+                    if (!audioUnlocked) {
+                        document.getElementById('unmute-btn').style.display = 'block';
+                    }
+
+                    // Play with fallback
+                    const doPlay = () => {
+                        vid.play().catch(err => {
+                            console.warn('[Camera] Play blocked, retrying muted:', err.message);
+                            vid.muted = true;
+                            vid.play().catch(e => console.error('[Camera] Muted play failed:', e));
+                        });
+                    };
+
+                    if (vid.readyState >= 3) {
+                        doPlay();
+                    } else {
+                        vid.load();
+                        vid.addEventListener('canplay', doPlay, { once: true });
+                    }
+                });
+
+                // ── TARGET LOST ──────────────────────────────────────────
+                this.el.addEventListener('targetLost', () => {
+                    console.log('[Camera] targetLost →', this.data.videoId);
+                    vid.pause();
+                    vid.currentTime = 0;
+                    vid.muted = true;
+                    if (activeVideoEl === vid) activeVideoEl = null;
+                    document.getElementById('unmute-btn').style.display = 'none';
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <!-- ── TOP NAV REMOVED ── -->
+
+    <!-- ── UNMUTE PROMPT ── -->
+    <button id="unmute-btn" onclick="unlockAudio()">🔇 TAP TO UNMUTE</button>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+         A-FRAME SCENE
+         • renderer alpha:true  → transparent canvas so camera shows through
+         • antialiasing off     → faster on mobile
+         • autoStart: true      → MindAR handles camera permission request
+    ───────────────────────────────────────────────────────────────── -->
+    <a-scene
+        mindar-image="imageTargetSrc: {{ targets_url }}; autoStart: true; maxTrack: 1; uiScanning: yes; uiLoading: no; uiError: no;"
+        color-space="sRGB"
+        renderer="colorManagement: true; physicallyCorrectLights: true; antialias: false; alpha: true;"
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false"
+        loading-screen="enabled: false">
+
+        <a-assets timeout="15000">
+            {% for entry in mapping %}
+            {% if entry.video_url %}
+            <video
+                id="vid_{{ entry.target_index }}"
+                src="{{ entry.video_url }}"
+                preload="none"
+                muted
+                playsinline
+                webkit-playsinline
+                loop
+                crossorigin="anonymous">
+            </video>
+            {% endif %}
+            {% endfor %}
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        {% for entry in mapping %}
+        {% if entry.video_url %}
+        <a-entity
+            mindar-image-target="targetIndex: {{ entry.target_index }}"
+            ar-video-target="videoId: vid_{{ entry.target_index }}">
+            <a-video
+                id="plane_{{ entry.target_index }}"
+                src="#vid_{{ entry.target_index }}"
+                position="0 0 0.001"
+                width="1"
+                height="0.5625"
+                rotation="0 0 0">
+            </a-video>
+        </a-entity>
+        {% endif %}
+        {% endfor %}
+
+    </a-scene>
+
+    <!-- unlockAudio must be global so onclick="" can call it -->
+    <script>
+        function unlockAudio() {
+            audioUnlocked = true;
+            if (activeVideoEl) {
+                activeVideoEl.muted = false;
+                if (activeVideoEl.paused) activeVideoEl.play().catch(() => {});
+            }
+            document.getElementById('unmute-btn').style.display = 'none';
+            console.log('[Camera] Audio unlocked by user');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Access | Ashwini Innovations</title>
+    <!-- Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Playfair+Display:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f3f5f9;
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+            --primary: #2563eb; /* True Blue */
+            --primary-hover: #1d4ed8;
+            --secondary: #60a5fa; /* Light Blue */
+            --accent: #38bdf8; /* Sky Blue */
+            
+            /* Clay Shadows */
+            --clay-shadow: 
+                8px 8px 16px rgba(166, 180, 200, 0.4),
+                -8px -8px 16px rgba(255, 255, 255, 0.8),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.9),
+                inset -1px -1px 2px rgba(166, 180, 200, 0.1);
+                
+            --clay-shadow-hover: 
+                12px 12px 20px rgba(166, 180, 200, 0.45),
+                -12px -12px 20px rgba(255, 255, 255, 0.9),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.9),
+                inset -1px -1px 2px rgba(166, 180, 200, 0.1);
+                
+            --clay-inset:
+                inset 4px 4px 8px rgba(166, 180, 200, 0.3),
+                inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+                
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --radius-pill: 9999px;
+            
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: var(--bg-main);
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, .title {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Ambient Background Gradients */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+            overflow: hidden;
+        }
+        
+        .ambient-blob {
+            position: absolute;
+            filter: blur(80px);
+            opacity: 0.4;
+            border-radius: 50%;
+            z-index: -1;
+            animation: drift 20s infinite alternate ease-in-out;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--secondary); }
+        .blob-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: var(--accent); opacity: 0.3; animation-delay: -5s; }
+
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(5%, 5%) scale(1.1); }
+        }
+
+        .form-container {
+            width: 90%;
+            max-width: 400px;
+            border-radius: var(--radius-xl);
+            background-color: #f3f5f9;
+            padding: 3rem 2.5rem;
+            color: var(--text-main);
+            box-shadow: var(--clay-shadow), 0 10px 30px rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(96, 165, 250, 0.4);
+            animation: cardIn 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .title {
+            text-align: center;
+            font-size: 2.2rem;
+            line-height: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--primary);
+            font-weight: 500;
+            margin-bottom: 2.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            margin-top: 1.25rem;
+            font-size: 0.9rem;
+        }
+
+        .input-group label {
+            display: block;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            outline: 0;
+            background-color: #f3f5f9;
+            padding: 1rem 1rem;
+            color: var(--text-main);
+            box-shadow: var(--clay-inset);
+            transition: var(--transition);
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 
+                inset 4px 4px 8px rgba(166, 180, 200, 0.3),
+                inset -4px -4px 8px rgba(255, 255, 255, 0.8),
+                0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        .error-box {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            box-shadow: var(--clay-inset);
+        }
+
+        .forgot {
+            display: flex;
+            justify-content: flex-end;
+            font-size: 0.85rem;
+            margin: 12px 0 24px 0;
+        }
+
+        .forgot a, .signup a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .forgot a:hover, .signup a:hover {
+            color: var(--primary-hover);
+        }
+
+        .sign {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            padding: 1rem;
+            text-align: center;
+            color: white;
+            border: none;
+            border-radius: var(--radius-pill);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1.05rem;
+            font-family: 'Roboto', sans-serif;
+            box-shadow: 
+                6px 6px 14px rgba(37, 99, 235, 0.3),
+                -4px -4px 10px rgba(255, 255, 255, 0.6),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.4);
+            margin-top: 1rem;
+        }
+
+        .sign:hover {
+            box-shadow: 
+                8px 8px 18px rgba(37, 99, 235, 0.4),
+                -6px -6px 12px rgba(255, 255, 255, 0.7);
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
+        .sign:active {
+            transform: translateY(1px);
+            box-shadow: 
+                inset 4px 4px 8px rgba(0, 0, 0, 0.2),
+                inset -4px -4px 8px rgba(255, 255, 255, 0.2);
+        }
+
+        .signup {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            margin-top: 2rem;
+        }
+
+        .back-portal {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .back-portal:hover { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-bg">
+        <div class="ambient-blob blob-1"></div>
+        <div class="ambient-blob blob-2"></div>
+    </div>
+
+    <div class="form-container">
+        <h1 class="title">Secure Login</h1>
+        <p class="subtitle">ASHWINI INNOVATIONS</p>
+        
+        {% if error %}
+        <div class="error-box">{{ error }}</div>
+        {% endif %}
+
+        <form class="form" method="POST">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" required autofocus>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required>
+                <div class="forgot">
+                    <a rel="noopener noreferrer" href="#">Forgot Password?</a>
+                </div>
+            </div>
+            <button class="sign" type="submit">Sign in</button>
+        </form>
+
+        <p class="signup">Need help?
+            <a rel="noopener noreferrer" href="#">Contact Admin</a>
+        </p>
+        <a href="/" class="back-portal">Return to Portal</a>
+    </div>
+
+</body>
+</html>

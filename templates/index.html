@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ashwini Innovations | Interactive Reality</title>
+    <!-- Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/ScrollTrigger.min.js"></script>
+    <style>
+        :root {
+            /* Claymorphism / Light Web3 Palette */
+            --bg-main: #f3f5f9;
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+            --primary: #2563eb; /* True Blue */
+            --primary-hover: #1d4ed8;
+            --secondary: #60a5fa; /* Light Blue */
+            --accent: #38bdf8; /* Sky Blue */
+            
+            /* Clay Shadows */
+            --clay-shadow: 
+                8px 8px 16px rgba(166, 180, 200, 0.4),
+                -8px -8px 16px rgba(255, 255, 255, 0.8),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.9),
+                inset -1px -1px 2px rgba(166, 180, 200, 0.1);
+                
+            --clay-shadow-hover: 
+                12px 12px 20px rgba(166, 180, 200, 0.45),
+                -12px -12px 20px rgba(255, 255, 255, 0.9),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.9),
+                inset -1px -1px 2px rgba(166, 180, 200, 0.1);
+                
+            --clay-inset:
+                inset 4px 4px 8px rgba(166, 180, 200, 0.3),
+                inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+                
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --radius-pill: 9999px;
+            
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, .logo span {
+            font-family: 'Roboto', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        /* Ambient Background Gradients */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+            overflow: hidden;
+        }
+        
+        .ambient-blob {
+            position: absolute;
+            filter: blur(80px);
+            opacity: 0.4;
+            border-radius: 50%;
+            z-index: -1;
+            animation: drift 20s infinite alternate ease-in-out;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--secondary); }
+        .blob-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: var(--accent); opacity: 0.3; animation-delay: -5s; }
+        .blob-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: var(--primary); opacity: 0.2; animation-delay: -10s; }
+
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(5%, 5%) scale(1.1); }
+        }
+
+        /* Top Navigation */
+        .nav-header {
+            position: absolute;
+            top: 0; width: 100%;
+            padding: 40px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: transparent;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            border-radius: 10px;
+            box-shadow: 2px 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover { color: var(--primary); }
+
+        .nav-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .btn-ghost {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+        }
+        .btn-ghost:hover { color: var(--primary); background: rgba(37,99,235,0.05); }
+
+        .btn-clay {
+            width: 9em;
+            height: 3em;
+            border-radius: 30em;
+            font-size: 15px;
+            font-family: inherit;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 6px 6px 12px rgba(166, 180, 200, 0.4),
+                       -6px -6px 12px rgba(255, 255, 255, 0.8);
+            background: #f3f5f9;
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: color 0.5s ease, transform 0.5s ease;
+        }
+
+        .btn-clay::before {
+            content: '';
+            width: 0;
+            height: 3em;
+            border-radius: 30em;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-image: linear-gradient(to right, var(--secondary) 0%, var(--primary) 100%);
+            transition: .5s ease;
+            display: block;
+            z-index: -1;
+        }
+
+        .btn-clay:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .btn-clay:hover::before {
+            width: 9em;
+        }
+        
+        .btn-clay:active {
+            box-shadow: var(--clay-inset);
+            transform: translateY(1px);
+        }
+
+        .btn-primary-clay {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 16px 36px;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            border: none;
+            box-shadow: 
+                6px 6px 14px rgba(37, 99, 235, 0.3),
+                -4px -4px 10px rgba(255, 255, 255, 0.6),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.4);
+            transition: var(--transition);
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary-clay:hover {
+            box-shadow: 
+                8px 8px 18px rgba(99, 102, 241, 0.4),
+                -6px -6px 12px rgba(255, 255, 255, 0.7);
+            transform: translateY(-3px);
+            filter: brightness(1.05);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 5% 60px;
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .hero-content {
+            flex: 1;
+            max-width: 600px;
+            z-index: 10;
+        }
+
+        .badge-clay {
+            display: inline-block;
+            background: #f3f5f9;
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: var(--clay-shadow);
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            margin-bottom: 24px;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 5vw, 4.2rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            color: var(--text-main);
+            letter-spacing: -0.03em;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-description {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: var(--text-dim);
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .hero-3d-container {
+            flex: 1.2;
+            height: 80vh;
+            position: relative;
+            z-index: 5;
+            pointer-events: auto;
+        }
+
+        #canvas-3d {
+            width: 100%;
+            height: 100%;
+            outline: none;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 100px 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px;
+        }
+
+        .clay-card {
+            background: #f3f5f9;
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: var(--clay-shadow);
+            border: 1px solid rgba(96, 165, 250, 0.3); /* Subtle blue border */
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .clay-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--clay-shadow-hover), 0 15px 35px rgba(37, 99, 235, 0.25); /* Strong blue glow */
+            border-color: var(--primary); /* Solid blue border on hover */
+        }
+
+        .icon-wrapper {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-md);
+            background: #f3f5f9;
+            box-shadow: var(--clay-inset);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 24px;
+            color: var(--primary);
+        }
+
+        .clay-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-main);
+        }
+
+        .clay-card p {
+            color: var(--text-dim);
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* AR Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(243, 245, 249, 0.8);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* 3D Flip Card for Modal */
+        .card {
+            overflow: visible;
+            width: 380px;
+            height: 480px;
+            perspective: 1000px;
+            position: relative;
+            transform: translateY(20px) scale(0.95);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .modal-overlay.active .card {
+            transform: translateY(0) scale(1);
+        }
+
+        .card-content {
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .card:hover .card-content {
+            transform: rotateY(180deg);
+        }
+
+        .front, .back {
+            background: #f3f5f9;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            border: 1px solid rgba(96, 165, 250, 0.4); /* Blue border */
+            box-shadow: var(--clay-shadow-hover);
+        }
+
+        .back {
+            transform: rotateY(180deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .back::before {
+            position: absolute;
+            content: ' ';
+            display: block;
+            width: 160px;
+            height: 160%;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), var(--primary), transparent);
+            animation: rotation_481 5000ms infinite linear;
+        }
+
+        .back-content {
+            position: absolute;
+            width: 98%;
+            height: 98%;
+            background: #f3f5f9;
+            border-radius: calc(var(--radius-xl) - 2px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            z-index: 2;
+        }
+
+        @keyframes rotation_481 {
+            0% { transform: rotateZ(0deg); }
+            100% { transform: rotateZ(360deg); }
+        }
+
+        .front .img-bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 1;
+        }
+        
+        .front .circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            position: absolute;
+            filter: blur(30px);
+            animation: floating 3000ms infinite ease-in-out;
+            opacity: 0.3;
+        }
+
+        #circle-top { top: -20px; right: -20px; background-color: var(--secondary); }
+        #circle-bottom { bottom: -20px; left: -20px; animation-delay: -1000ms; }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(20px) scale(1.1); }
+        }
+        
+        .front-content {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            text-align: center;
+            background: linear-gradient(to top, rgba(37,99,235,0.85) 0%, rgba(37,99,235,0.1) 100%);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f3f5f9;
+            border: none;
+            box-shadow: var(--clay-shadow);
+            color: var(--text-dim);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover { color: var(--primary); box-shadow: var(--clay-shadow-hover); }
+        .close-btn:active { box-shadow: var(--clay-inset); }
+
+        .modal-qr-container {
+            width: 240px;
+            height: 240px;
+            margin: 0 auto 30px;
+            padding: 20px;
+            background: #f3f5f9;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--clay-inset);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-qr-container img {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            mix-blend-mode: multiply;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .hero-section { flex-direction: column; text-align: center; padding-top: 140px; }
+            .hero-content { max-width: 100%; margin-bottom: 60px; }
+            .hero-3d-container { width: 100%; height: 50vh; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-bg">
+        <div class="ambient-blob blob-1"></div>
+        <div class="ambient-blob blob-2"></div>
+        <div class="ambient-blob blob-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav-header">
+        <a href="/" class="logo">
+            <div class="logo-icon"></div>
+            <span>Ashwini Innovations</span>
+        </a>
+        <div class="nav-actions">
+            <a href="/login" class="btn-clay">Login</a>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content reveal">
+                <h1 class="hero-title">Preserving Memories<br>in <span class="text-gradient">Interactive Experiences</span></h1>
+                <p class="hero-description">
+                    We specialize in cutting-edge solutions that bridge the gap between imagination and the physical world. Transform your physical photos into dynamic digital experiences and relive your favorite moments.
+                </p>
+                <button id="openArModal" class="btn-primary-clay">EXPERIENCE NOW</button>
+            </div>
+            <div class="hero-3d-container reveal" style="transition-delay: 0.2s;">
+                <canvas id="canvas-3d"></canvas>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="content-section features-section">
+            <div class="section-header reveal">
+                <h2 class="section-title">Powering Your Experience</h2>
+                <p class="section-subtitle">Human-centered technology designed to seamlessly blend worlds.</p>
+            </div>
+            <div class="features-grid">
+                <div class="clay-card reveal">
+                    <div class="icon-wrapper">🎯</div>
+                    <h3>Instant Recognition</h3>
+                    <p>Experience fast and precise image detection that responds instantly, creating a smooth and immersive connection between real-world objects and digital content.</p>
+                </div>
+                <div class="clay-card reveal" style="transition-delay: 0.1s;">
+                    <div class="icon-wrapper">🚀</div>
+                    <h3>Seamless Experience</h3>
+                    <p>Enjoy fluid and stable interactions where visuals appear naturally aligned, delivering a consistent and engaging experience.</p>
+                </div>
+                <div class="clay-card reveal" style="transition-delay: 0.2s;">
+                    <div class="icon-wrapper">🌍</div>
+                    <h3>Universal Accessibility</h3>
+                    <p>Access interactive experiences directly through your browser on any modern smartphone, without the need for downloads or installations.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 Ashwini Innovations. All Rights Reserved.</p>
+    </footer>
+
+    <!-- AR Modal -->
+    <div class="modal-overlay" id="arModal">
+        <div class="card">
+            <button class="close-btn" id="closeArModal" style="z-index: 100;">&times;</button>
+            <div class="card-content">
+                <div class="front">
+                    <img class="img-bg" src="{{ url_for('static', filename='images/ar_card.png') }}" alt="Visual" onerror="this.src='https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80'">
+                    <div id="circle-top" class="circle"></div>
+                    <div id="circle-bottom" class="circle"></div>
+                    <div class="front-content">
+                        <h3 style="margin-bottom: 8px; font-size: 2rem; color: #ffffff;">Experience It</h3>
+                        <p style="color: #e0f2fe; font-weight: 500; font-size: 0.95rem; letter-spacing: 1px;">HOVER TO FLIP</p>
+                    </div>
+                </div>
+                <div class="back">
+                    <div class="back-content">
+                        <h3 style="margin-bottom: 8px; font-size: 1.4rem; color: var(--text-main);">Ashwini Innovations</h3>
+                        <p style="color: var(--primary); font-weight: 600; font-size: 0.9rem; margin-bottom: 25px;">INTERACTIVE REALITY</p>
+                        
+                        <div class="modal-qr-container" style="box-shadow: none; border: 1px solid rgba(0,0,0,0.05); width: 220px; height: 220px; margin-bottom: 20px; padding: 10px;">
+                            <img id="modal-qr" src="" alt="QR Code">
+                        </div>
+                        
+                        <p style="color: var(--text-dim); font-size: 0.9rem; font-weight: 500;">Scan with your phone to launch<br>the Camera experience.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // --- GSAP Animations ---
+        gsap.registerPlugin(ScrollTrigger);
+        document.querySelectorAll('.reveal').forEach((el, index) => {
+            gsap.fromTo(el, 
+                { opacity: 0, y: 40 },
+                { 
+                    scrollTrigger: { trigger: el, start: "top 85%" },
+                    opacity: 1, y: 0, duration: 1, ease: "power3.out",
+                    delay: el.style.transitionDelay ? parseFloat(el.style.transitionDelay) : 0
+                }
+            );
+        });
+
+        // --- Modal Logic ---
+        const openBtn = document.getElementById('openArModal');
+        const closeBtn = document.getElementById('closeArModal');
+        const modal = document.getElementById('arModal');
+        const qrImg = document.getElementById('modal-qr');
+
+        openBtn.onclick = () => {
+            const arUrl = window.location.origin + "/ar";
+            // Use a color that fits the clay theme for the QR
+            qrImg.src = `https://quickchart.io/qr?text=${encodeURIComponent(arUrl)}&size=300&margin=1&dark=6366f1&light=f3f5f9`;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeModal = () => {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        };
+
+        closeBtn.onclick = closeModal;
+        modal.onclick = (e) => { if(e.target === modal) closeModal(); };
+
+        // --- Three.js Claymorphism Memory Cubes ---
+        const canvas = document.getElementById('canvas-3d');
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        
+        // Setup Scene & Camera
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+        camera.position.set(0, 0, 12);
+
+        // Resize handler
+        function resize() {
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            if (canvas.width !== width || canvas.height !== height) {
+                renderer.setSize(width, height, false);
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+            }
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Lighting (Soft diffused for clay effect)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+
+        const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirLight1.position.set(5, 10, 7);
+        scene.add(dirLight1);
+
+        const dirLight2 = new THREE.DirectionalLight(0xe0e7ff, 0.4);
+        dirLight2.position.set(-5, -5, 5);
+        scene.add(dirLight2);
+
+        // Load Memory Images (Unsplash placeholders representing students/memories)
+        const textureLoader = new THREE.TextureLoader();
+        const images = [
+            'https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', // Students
+            'https://images.unsplash.com/photo-1511629091441-ee46146481b6?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', // Friends laughing
+            'https://images.unsplash.com/photo-1529390079861-591de354faf5?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', // Graduation
+            'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', // Group study
+            'https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80', // High five
+            'https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80'  // Team collaboration
+        ];
+
+        // Create Cubes Cluster
+        const group = new THREE.Group();
+        scene.add(group);
+
+        const cubes = [];
+        const roundedBoxGeometry = (width, height, depth, radius, smoothness) => {
+            // Using standard BoxGeometry but we will fake rounded corners via shading
+            // A true rounded box requires an external module or complex buffer geometry.
+            // Standard box with high segments + smooth shading achieves a soft look.
+            return new THREE.BoxGeometry(width, height, depth, smoothness, smoothness, smoothness);
+        };
+
+        const geo = roundedBoxGeometry(2.6, 2.6, 2.6, 0.2, 4);
+
+        // Hexagonal Ring Formation (matches user image)
+        const radius = 3.8;
+        const layoutPositions = [];
+        // Angles for a hexagon with top/bottom points: 90, 30, 330, 270, 210, 150 degrees
+        const angles = [Math.PI/2, Math.PI/6, -Math.PI/6, -Math.PI/2, -5*Math.PI/6, 5*Math.PI/6];
+        angles.forEach(a => {
+            layoutPositions.push({
+                x: Math.cos(a) * radius,
+                y: Math.sin(a) * radius,
+                z: 0 // Keep on same flat plane for perfect ring
+            });
+        });
+
+        images.forEach((url, i) => {
+            textureLoader.load(url, (texture) => {
+                texture.generateMipmaps = true;
+                texture.minFilter = THREE.LinearMipmapLinearFilter;
+                
+                // Clay material with image texture
+                const mat = new THREE.MeshStandardMaterial({ 
+                    map: texture,
+                    roughness: 0.5, 
+                    metalness: 0.1,
+                    color: 0xffffff
+                });
+
+                const mesh = new THREE.Mesh(geo, mat);
+                
+                // Apply structured position
+                const pos = layoutPositions[i];
+                mesh.position.set(pos.x, pos.y, pos.z);
+                
+                // Isometric rotation so the cube's corner points directly at the camera
+                mesh.rotation.set(0.615, Math.PI/4, 0);
+
+                group.add(mesh);
+                cubes.push(mesh);
+                
+                // Gentle, organized floating animation
+                gsap.to(mesh.position, {
+                    y: mesh.position.y + 0.3,
+                    duration: 3 + (i % 3) * 0.5, // Subtle wave effect across columns
+                    yoyo: true,
+                    repeat: -1,
+                    ease: "sine.inOut"
+                });
+            });
+        });
+
+        // Mouse interaction
+        let targetRotationX = 0;
+        let targetRotationY = 0;
+        let mouseX = 0;
+        let mouseY = 0;
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - windowHalfX) * 0.001;
+            mouseY = (event.clientY - windowHalfY) * 0.001;
+        });
+
+        // Animation Loop
+        const clock = new THREE.Clock();
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            resize();
+            
+            const delta = clock.getDelta();
+
+            // Smooth parallax tilt and positional shift based on mouse
+            targetRotationY = mouseX * 0.35;
+            targetRotationX = mouseY * 0.35;
+            
+            // Smooth rotation tracking
+            group.rotation.y += 0.08 * (targetRotationY - group.rotation.y);
+            group.rotation.x += 0.08 * (targetRotationX - group.rotation.x);
+
+            // Smooth position tracking (makes the whole structure float with mouse)
+            const targetPosX = mouseX * 1.0;
+            const targetPosY = mouseY * 1.0;
+            group.position.x += 0.06 * (targetPosX - group.position.x);
+            group.position.y += 0.06 * (targetPosY - group.position.y);
+
+            renderer.render(scene, camera);
+        }
+
+        animate3D();
+    </script>
+</body>
+</html>

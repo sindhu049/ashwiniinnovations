@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Console | Ashwini Innovations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image.prod.js"></script>
+    <style>
+        :root {
+            --bg-main: #020c1b;
+            --bg-card: #0a192f;
+            --bg-sidebar: #020c1b;
+            --bg-accent: #112240;
+            --border: rgba(100, 255, 218, 0.1);
+            --primary: #00ffff;
+            --primary-dim: rgba(0, 255, 255, 0.05);
+            --text-main: #e6f1ff;
+            --text-dim: #8892b0;
+            --sidebar-width: 260px;
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-sidebar: #f1f5f9;
+            --border: rgba(0, 0, 0, 0.1);
+            --text-main: #0f172a;
+            --text-dim: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            padding-left: 8px;
+        }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), #0077be);
+            border-radius: 8px;
+        }
+
+        .brand-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background-color: var(--primary-dim);
+        }
+
+        .nav-item i { width: 18px; height: 18px; }
+
+        /* Main Content */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 40px 60px;
+            max-width: 1400px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 48px;
+        }
+
+        .page-title h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -1px; }
+        .page-title p { color: var(--text-dim); font-size: 0.95rem; margin-top: 4px; }
+
+        .header-actions { display: flex; gap: 12px; }
+        .btn-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-icon:hover { color: var(--text-main); border-color: var(--text-dim); }
+
+        /* Views */
+        .view-panel { display: none; animation: fadeIn 0.3s ease; }
+        .view-panel.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard View */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: var(--radius);
+        }
+
+        .stat-card .label { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 8px; font-weight: 500; }
+        .stat-card .value { font-size: 1.5rem; font-weight: 700; }
+
+        .deployment-area {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .deployment-header { margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        .deployment-header h2 { font-size: 1.25rem; font-weight: 600; }
+
+        .upload-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; }
+
+        .upload-box {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 48px 24px;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .upload-box:hover { border-color: var(--primary); background: var(--primary-dim); }
+        .upload-box i { width: 40px; height: 40px; color: var(--primary); margin-bottom: 16px; }
+        .upload-box h4 { font-size: 1rem; margin-bottom: 8px; }
+        .upload-box p { font-size: 0.8rem; color: var(--text-dim); }
+        .upload-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .upload-box.selected { border-style: solid; border-color: var(--primary); }
+
+        .btn-deploy {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), #0077be);
+            color: #020c1b;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 20px rgba(0, 255, 255, 0.15);
+        }
+
+        .btn-deploy:hover { 
+            transform: translateY(-3px) scale(1.01); 
+            box-shadow: 0 15px 30px rgba(0, 255, 255, 0.3); 
+            filter: brightness(1.1);
+        }
+
+        /* Mappings View */
+        .mappings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .mapping-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .mapping-card:hover { border-color: var(--primary); transform: translateY(-4px); }
+
+        .mapping-thumb {
+            height: 180px;
+            width: 100%;
+            background-size: cover;
+            background-position: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mapping-info { padding: 20px; }
+        .mapping-title { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+        .mapping-meta { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .mapping-actions { display: flex; justify-content: space-between; align-items: center; }
+        .btn-delete {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+        .btn-delete:hover { background: rgba(239, 68, 68, 0.1); }
+
+        /* Loader Overlay */
+        #upload-loader {
+            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.9);
+            z-index: 1000; display: none; flex-direction: column;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-container { width: 300px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-bottom: 20px; }
+        #load-progress { height: 100%; width: 0%; background: var(--primary); transition: width 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div id="upload-loader">
+        <div class="progress-container">
+            <div id="load-progress"></div>
+        </div>
+        <p id="load-msg" style="font-weight: 500; font-size: 0.9rem;">Processing Assets...</p>
+    </div>
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-logo"></div>
+            <span class="brand-name">Ashwini Innovations</span>
+        </div>
+        <nav class="nav-list">
+            <div class="nav-item active" data-target="dashboard">
+                <i data-lucide="layout-dashboard"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" data-target="mappings">
+                <i data-lucide="layers"></i>
+                <span>Mappings</span>
+            </div>
+            <div class="nav-item" data-target="arcamera">
+                <i data-lucide="camera"></i>
+                <span>Camera</span>
+            </div>
+            <div class="nav-item" data-target="settings">
+                <i data-lucide="settings"></i>
+                <span>Settings</span>
+            </div>
+        </nav>
+
+        <div style="margin-top: auto;">
+            <a href="/logout" class="nav-item" style="color: #ef4444;">
+                <i data-lucide="log-out"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-wrapper">
+        <header>
+            <div class="page-title">
+                <h1 id="view-title">Overview</h1>
+                <p id="view-subtitle">Monitor and manage your deployments.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" id="themeToggle"><i data-lucide="moon"></i></button>
+                <a href="/" class="btn-icon" title="View Portal"><i data-lucide="external-link"></i></a>
+            </div>
+        </header>
+
+        <!-- Dashboard View -->
+        <div class="view-panel active" id="view-dashboard">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <p class="label">Total Mappings</p>
+                    <p class="value">{{ mapping|length }}</p>
+                </div>
+                <div class="stat-card">
+                    <p class="label">System Status</p>
+                    <p class="value" style="color: #22c55e;">Active</p>
+                </div>
+                <div class="stat-card">
+                    <p class="label">Admin Session</p>
+                    <p class="value" style="font-size: 1rem; color: var(--primary);">Authorized</p>
+                </div>
+            </div>
+
+            <div class="deployment-area">
+                <div class="deployment-header">
+                    <h2>Create New Deployment</h2>
+                </div>
+                <form id="uploadForm">
+                    <div class="upload-columns">
+                        <div class="upload-box" id="imgBox">
+                            <i data-lucide="image"></i>
+                            <h4>Target Image</h4>
+                            <p>JPG or PNG (Scan Surface)</p>
+                            <input type="file" id="imgFile" accept="image/*" required>
+                            <p id="imgLabel" style="font-size: 0.75rem; color: var(--primary); margin-top: 12px; font-weight: 600;"></p>
+                        </div>
+                        <div class="upload-box" id="vidBox">
+                            <i data-lucide="video"></i>
+                            <h4>Overlay Video</h4>
+                            <p>MP4 (Digital Content)</p>
+                            <input type="file" id="vidFile" accept="video/mp4" required>
+                            <p id="vidLabel" style="font-size: 0.75rem; color: var(--primary); margin-top: 12px; font-weight: 600;"></p>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-deploy">
+                        <i data-lucide="zap"></i>
+                        DEPLOY TO CLOUD
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mappings View -->
+        <div class="view-panel" id="view-mappings">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: var(--bg-card); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border);">
+                <div>
+                    <h2 style="font-size: 1.1rem; margin-bottom: 4px;">Sync Target File</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-dim);">After deleting mappings, rebuild the target file to remove old data and fix detection.</p>
+                </div>
+                <button onclick="rebuildTargets()" style="
+                    background: linear-gradient(135deg, #ef4444, #b91c1c);
+                    color: white; border: none; padding: 12px 24px; border-radius: 10px;
+                    font-weight: 700; font-size: 0.9rem; cursor: pointer; white-space: nowrap;
+                ">🔧 REBUILD TARGETS</button>
+            </div>
+
+            <div class="mappings-grid">
+                {% for entry in mapping %}
+                <div class="mapping-card">
+                    <div class="mapping-thumb" style="background-image: url('{{ entry.image_url }}')"></div>
+                    <div class="mapping-info">
+                        <p class="mapping-title">Deployment #{{ entry.target_index }}</p>
+                        <p class="mapping-meta">{{ entry.video_url }}</p>
+                        <div class="mapping-actions">
+                            <div style="display: flex; gap: 8px;">
+                                <a href="{{ entry.image_url }}" target="_blank" class="btn-icon" style="width: 32px; height: 32px;"><i data-lucide="eye"></i></a>
+                                <a href="{{ entry.video_url }}" target="_blank" class="btn-icon" style="width: 32px; height: 32px;"><i data-lucide="play-circle"></i></a>
+                            </div>
+                            <form action="{{ admin_path }}/delete/{{ entry.target_index }}" method="POST" onsubmit="return confirm('Delete this mapping permanently?');">
+                                <button type="submit" class="btn-delete" title="Delete mapping"><i data-lucide="trash-2"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if not mapping %}
+                <div style="grid-column: 1/-1; text-align: center; padding: 100px; color: var(--text-dim);">
+                    <i data-lucide="box" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
+                    <p>No deployments found. Start by creating one!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Camera View -->
+        <div class="view-panel" id="view-arcamera">
+            <div class="deployment-area" style="text-align: center; max-width: 800px; margin: 0 auto;">
+                <div style="margin-bottom: 40px;">
+                    <div style="width: 80px; height: 80px; background: var(--primary-dim); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                        <i data-lucide="camera" style="width: 40px; height: 40px; color: var(--primary);"></i>
+                    </div>
+                    <h2 style="margin-bottom: 12px;">Live Testing</h2>
+                    <p style="color: var(--text-dim); line-height: 1.6;">As an administrator, you can launch the interface directly to test your deployments. Ensure your browser has camera permissions enabled.</p>
+                </div>
+                
+                <a href="/ar" target="_blank" class="btn-deploy" style="text-decoration: none; display: inline-flex; width: auto; padding: 18px 48px;">
+                    <i data-lucide="external-link"></i>
+                    LAUNCH VIEWER
+                </a>
+
+                <div style="margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    <div>
+                        <i data-lucide="check-circle" style="color: #22c55e; margin-bottom: 12px;"></i>
+                        <p style="font-size: 0.8rem; font-weight: 600;">Cloud Sync Active</p>
+                    </div>
+                    <div>
+                        <i data-lucide="check-circle" style="color: #22c55e; margin-bottom: 12px;"></i>
+                        <p style="font-size: 0.8rem; font-weight: 600;">Permission Verified</p>
+                    </div>
+                    <div>
+                        <i data-lucide="check-circle" style="color: #22c55e; margin-bottom: 12px;"></i>
+                        <p style="font-size: 0.8rem; font-weight: 600;">System Ready</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings View -->
+        <div class="view-panel" id="view-settings">
+            <div class="stat-card" style="max-width: 600px;">
+                <h3 style="margin-bottom: 24px;">Security Settings</h3>
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div>
+                        <p class="label">Admin Username</p>
+                        <p class="value" style="font-size: 1rem;">admin</p>
+                    </div>
+                    <div>
+                        <p class="label">API Key Status</p>
+                        <p class="value" style="font-size: 1rem; color: #22c55e;">Connected to Supabase</p>
+                    </div>
+                    <div style="padding-top: 24px; border-top: 1px solid var(--border);">
+                        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 16px;">Security Token: <code>{{ admin_path.split('/')[-1] }}</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        // Navigation Logic
+        const navItems = document.querySelectorAll('.nav-item[data-target]');
+        const viewPanels = document.querySelectorAll('.view-panel');
+        const viewTitle = document.getElementById('view-title');
+        const viewSubtitle = document.getElementById('view-subtitle');
+
+        const viewData = {
+            dashboard: { title: "Overview", subtitle: "Monitor and manage your deployments." },
+            mappings: { title: "Mappings", subtitle: "Manage your interactive digital content." },
+            arcamera: { title: "Camera", subtitle: "Launch the live experience for testing." },
+            settings: { title: "Settings", subtitle: "Manage portal security and preferences." }
+        };
+
+        navItems.forEach(item => {
+            item.onclick = () => {
+                const target = item.dataset.target;
+                navItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                viewPanels.forEach(p => p.classList.remove('active'));
+                document.getElementById(`view-${target}`).classList.add('active');
+
+                viewTitle.textContent = viewData[target].title;
+                viewSubtitle.textContent = viewData[target].subtitle;
+            };
+        });
+
+        // Theme Toggle
+        const themeBtn = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        const applyTheme = (theme) => {
+            html.setAttribute('data-theme', theme);
+            themeBtn.innerHTML = theme === 'dark' ? '<i data-lucide="moon"></i>' : '<i data-lucide="sun"></i>';
+            lucide.createIcons();
+            localStorage.setItem('theme', theme);
+        };
+
+        applyTheme(localStorage.getItem('theme') || 'dark');
+        themeBtn.onclick = () => applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+
+        // File Selection Logic
+        document.getElementById('imgFile').onchange = e => {
+            document.getElementById('imgLabel').textContent = e.target.files[0].name;
+            document.getElementById('imgBox').classList.add('selected');
+        };
+        document.getElementById('vidFile').onchange = e => {
+            document.getElementById('vidLabel').textContent = e.target.files[0].name;
+            document.getElementById('vidBox').classList.add('selected');
+        };
+
+        // Upload Logic (MindAR Compiler)
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const imgFile = document.getElementById('imgFile').files[0];
+            const vidFile = document.getElementById('vidFile').files[0];
+            if (!imgFile || !vidFile) return;
+
+            const loader = document.getElementById('upload-loader');
+            const bar = document.getElementById('load-progress');
+            const msg = document.getElementById('load-msg');
+            
+            loader.style.display = 'flex';
+            bar.style.width = '10%';
+            msg.textContent = 'Analyzing Image Features...';
+
+            try {
+                const img = await new Promise(r => {
+                    const reader = new FileReader();
+                    reader.onload = e => { const i = new Image(); i.onload = () => r(i); i.src = e.target.result; };
+                    reader.readAsDataURL(imgFile);
+                });
+
+                const compiler = new MINDAR.IMAGE.Compiler();
+                await compiler.compileImageTargets([img], (p) => {
+                    bar.style.width = (10 + p * 60) + '%';
+                });
+
+                const buffer = await compiler.exportData();
+                const mindBlob = new Blob([buffer], { type: 'application/octet-stream' });
+                bar.style.width = '80%';
+                msg.textContent = 'Syncing to Cloud Storage...';
+
+                const formData = new FormData();
+                formData.append('action', 'upload_pair');
+                formData.append('image', imgFile);
+                formData.append('video', vidFile);
+                formData.append('mind_file', mindBlob, 'targets.mind');
+
+                // Use XMLHttpRequest for real progress tracking during upload
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '{{ admin_path }}', true);
+
+                xhr.upload.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        const percent = (event.loaded / event.total) * 20; // Last 20% is upload
+                        bar.style.width = (80 + percent) + '%';
+                        msg.textContent = `Uploading to Cloud... ${Math.round(event.loaded/1024/1024)}MB / ${Math.round(event.total/1024/1024)}MB`;
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        bar.style.width = '100%';
+                        msg.textContent = 'Deployment Successful!';
+                        setTimeout(() => location.reload(), 800);
+                    } else {
+                        alert('Deployment Failed: ' + xhr.responseText);
+                        loader.style.display = 'none';
+                    }
+                };
+
+                xhr.onerror = () => {
+                    alert('Network Error during upload.');
+                    loader.style.display = 'none';
+                };
+
+                xhr.send(formData);
+            } catch (err) {
+                alert('Deployment Failed: ' + err.message);
+                loader.style.display = 'none';
+            }
+        };
+
+        // ── Rebuild Targets: recompile .mind from only current images ──────
+        async function rebuildTargets() {
+            const loader = document.getElementById('upload-loader');
+            const bar    = document.getElementById('load-progress');
+            const msg    = document.getElementById('load-msg');
+
+            loader.style.display = 'flex';
+            bar.style.width = '5%';
+            msg.textContent = 'Fetching current target list...';
+
+            try {
+                // 1. Get all active image URLs from backend
+                const res = await fetch('/api/rebuild-targets');
+                if (!res.ok) throw new Error('Failed to fetch targets: ' + res.status);
+                const data = await res.json();
+                const targets = data.targets;
+
+                if (targets.length === 0) {
+                    loader.style.display = 'none';
+                    alert('No mappings found. Add at least one image first.');
+                    return;
+                }
+
+                msg.textContent = `Loading ${targets.length} target image(s)...`;
+                bar.style.width = '10%';
+
+                // 2. Download each target image and convert to HTMLImageElement
+                const images = [];
+                for (let i = 0; i < targets.length; i++) {
+                    const t = targets[i];
+                    bar.style.width = (10 + (i / targets.length) * 20) + '%';
+                    msg.textContent = `Loading image ${i + 1} of ${targets.length}...`;
+
+                    const imgEl = await new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => resolve(img);
+                        img.onerror = () => reject(new Error(`Failed to load image: ${t.image_url}`));
+                        // Use a proxy-busted URL to avoid CORS cache issues
+                        img.src = t.image_url + '?_r=' + Date.now();
+                    });
+                    images.push(imgEl);
+                }
+
+                // 3. Recompile ALL images into one fresh .mind file
+                msg.textContent = 'Recompiling targets (this may take a moment)...';
+                const compiler = new MINDAR.IMAGE.Compiler();
+                await compiler.compileImageTargets(images, (progress) => {
+                    bar.style.width = (30 + progress * 50) + '%';
+                    msg.textContent = `Compiling targets: ${Math.round(progress * 100)}%`;
+                });
+
+                const buffer   = await compiler.exportData();
+                const mindBlob = new Blob([buffer], { type: 'application/octet-stream' });
+
+                bar.style.width = '85%';
+                msg.textContent = 'Uploading rebuilt targets to cloud...';
+
+                // 4. POST the new .mind file to the server
+                const formData = new FormData();
+                formData.append('mind_file', mindBlob, 'targets.mind');
+
+                const commitRes = await fetch('/api/commit-rebuild', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!commitRes.ok) {
+                    const errData = await commitRes.json();
+                    throw new Error(errData.error || 'Commit failed');
+                }
+
+                bar.style.width = '100%';
+                msg.textContent = '✅ Targets rebuilt successfully! Reloading...';
+                setTimeout(() => location.reload(), 1000);
+
+            } catch (err) {
+                console.error('Rebuild error:', err);
+                alert('Rebuild Failed: ' + err.message);
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
